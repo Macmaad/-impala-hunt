@@ -12,7 +12,7 @@ class Tree:
 
     def search_knowledge(self, initial_position, impala_move, lion_move):
         """
-        Check all the tree to check if something similar already happended.
+        Check all the tree to check if something similar already happened.
         :return:
         """
 
@@ -52,7 +52,7 @@ class Board:
 
     def distance_between(self):
         """
-        Check distance between lion and impala. Check everything around and take less distance.
+        Check distance between lion and impala. Check everything around and take the smaller distance.
         """
         ...
 
@@ -100,6 +100,8 @@ class Lion:
         """
         Using the tree that handles the knowledge choose a move. If no knowledge provided choose it random.
         Should validate the lake spaces.
+
+        Update board.
         :return:
         """
         ...
@@ -126,7 +128,8 @@ def interactive_menu():
     1. Step by step hunt
     2. Train. (take input from user)
     3. Download knowledge.
-    4. Stop
+    4. Save knowledge
+    5. Stop (save knowledge)
     :return:
     """
     ...
