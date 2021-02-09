@@ -101,6 +101,8 @@ class Lion:
         Using the tree that handles the knowledge choose a move. If no knowledge provided choose it random.
         Should validate the lake spaces.
 
+        Define for each position the spaces where the lion can move. (Hardcode them)
+
         Update board.
         :return:
         """
