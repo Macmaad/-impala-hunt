@@ -1,26 +1,29 @@
-LION_MOVES_FROM_POSITION = {1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}, 8: {}}
+import random
 
 
-class Tree:
-    def __init__(self, data):
+class Knowledge:
+    def __init__(self, position):
         """
         The head will be the initial position of the lion, then each children will be the action that the animals
         did for example {"impala": "drink_water", "lion": "move_west"}.
         """
-        self.children = []
-        self.data = data
+        self.data = dict()
+        self.position = position
 
-    def search_knowledge(self, initial_position, impala_move, lion_move):
+    def search_knowledge(self, impala_move, lion_move, distance_between):
         """
-        Check all the tree to check if something similar already happened.
+        Check all the tree to check if something similar already happened. If something match, look for the fastest
+        way to get a success result and follow that path.
         :return:
         """
+        ...
 
-    def save_knowledge(self):
+    def save_knowledge(self, impala_move, lion_move, distance_between):
         """
         Save everything on a txt file that can be loaded before.
         :return:
         """
+        ...
 
     def load_knowledge(self):
         """
@@ -30,59 +33,56 @@ class Tree:
         ...
 
 
-class Board:
-
-    def __init__(self):
-        """
-        Init board with 8 positions, take in account lake and set Imapla in place.
-        """
-        ...
-
-    def __str__(self):
-        """
-        Print board.
-        """
-        ...
-
-    def update_board(self):
-        """
-        Update board if someone moves, remove old representation of the element.
-        """
-        ...
-
-    def distance_between(self):
-        """
-        Check distance between lion and impala. Check everything around and take the smaller distance.
-        """
-        ...
+def need_to_escape(distance_between):
+    """
+    Handles logic to see if the impala needs to run from the lion.
+    :param distance_between:
+    :return: bool
+    """
+    return distance_between < 3
 
 
 class Impala:
 
-    def __init__(self, board):
+    def __init__(self):
         """
         init impala with the position.
-        :param board: board object.
         """
-        ...
+        self.impala_moves = ["look_right", "look_left", "look_up", "drink_water"]
 
-    def move(self):
+    def move(self, distance_from_lion):
         """
         Random choice of movements.
         :return:
         """
-        ...
+        if not need_to_escape(distance_from_lion):
+            impala_move = random.choice(self.impala_moves)
+        else:
+            impala_move = "escape"
+        return impala_move
 
-    def scape(self):
-        """
-        Scape to the right or left if depends on the lion position. If the lion is on the center the scape should be a
-        random decision.
 
-        Some maths should make this easy. Depending how far is the lion that we should "simulate" the scape or just
-        decide.
-        :return:
-        """
-        ...
+def set_initial_distance(initial_position):
+    """
+    :param initial_position: int parameter to set the distance between the lion and the impala at the beginning
+    this value will change with the time.
+    :return:
+    """
+    initial_distance = None
+    if initial_position == 1:
+        initial_distance = 15
+
+    elif initial_position in (2, 8):
+        initial_distance = 12
+
+    elif initial_position in (3, 4, 5, 6, 7):
+        initial_distance = 9
+
+    return initial_distance
+
+
+def look_for_knowledge(tree_head, position, distance_between):
+    ...
 
 
 class Lion:
@@ -90,13 +90,15 @@ class Lion:
     Notes: Always track lion position.
     """
 
-    def __init__(self, board, position):
+    def __init__(self, position):
         """
         Init lion on board.
         """
-        ...
+        self.position = position
+        self.distance_to_impala = set_initial_distance(position)
+        self.lion_moves = ["move", "hide", "attack"]
 
-    def move(self):
+    def move(self, tree_node):
         """
         Using the tree that handles the knowledge choose a move. If no knowledge provided choose it random.
         Should validate the lake spaces.
@@ -106,14 +108,12 @@ class Lion:
         Update board.
         :return:
         """
-        ...
+        lion_move = random.choice(self.lion_moves)  # this is temporal until we can load the knowledge.
 
-    def attack(self):
-        """
-        Depends on the position if the lions attack and reaches the impala. Should be something easy using maths.
-        :return:
-        """
-        ...
+        if lion_move == "move":
+            self.distance_to_impala = self.distance_to_impala - 1
+
+        return lion_move
 
 
 def main():
@@ -124,6 +124,20 @@ def main():
     ...
 
 
+def lion_was_seen(impala_move, lion_move, initial_position):
+    seen = False
+    if impala_move == "look_right" and lion_move != "hide" and initial_position in (2, 3, 4):
+        seen = True
+
+    elif impala_move == "look_up" and lion_move != "hide" and initial_position in (1, 2, 8):
+        seen = True
+
+    elif impala_move == "look_left" and lion_move != "hide" and initial_position in (6, 7, 8):
+        seen = True
+
+    return seen
+
+
 def interactive_menu():
     """
     Allows some decisions:
@@ -132,12 +146,21 @@ def interactive_menu():
     3. Download knowledge.
     4. Save knowledge
     5. Stop (save knowledge)
-    :return:
+    :return: int with option.
     """
     ...
 
 
-def simulate_hunt():
+def escape_success(distance_between):
+    if distance_between == 3:
+        incursion_status = True
+    else:
+        incursion_status = False
+
+    return incursion_status
+
+
+def simulate_hunt(initial_position):
     """
     Check if is an automatic hunt or a step by step hunt.
     start lion, impala and board.
@@ -159,4 +182,37 @@ def simulate_hunt():
         store child node with new moves.
         move tree head.
     """
-    ...
+    incursion_status, lion_move, impala_move, finish = True, None, None, False
+    knowledge = Knowledge(initial_position)
+    impala = Impala()
+    lion = Lion(initial_position)
+
+    while True:
+        distance_between = lion.distance_to_impala
+        was_seen = lion_was_seen(impala_move, lion_move, distance_between)
+        if was_seen:
+            finish = True
+            incursion_status = escape_success(distance_between)
+
+        if not finish:
+            impala_move = impala.move(distance_between)
+            if impala_move == "scape":
+                finish = True
+                incursion_status = escape_success(distance_between)
+
+        if not finish:
+            lion_move = lion.move(tree_head)
+            if lion_move == "attack":
+                finish = True
+                incursion_status = escape_success(distance_between)
+
+        if finish:
+            # Store incursion
+            print(lion_move, impala_move, incursion_status)
+            user_input = int(input("Continue 1=yes/2=no"))
+            if user_input == 2:
+                break
+        print(lion_move, impala_move, incursion_status)
+
+
+simulate_hunt(3)
