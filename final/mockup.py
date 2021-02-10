@@ -10,20 +10,49 @@ class Knowledge:
         self.data = dict()
         self.position = position
 
-    def search_knowledge(self, impala_move, lion_move, distance_between):
+    def search_knowledge(self, impala_move, distance_between):
         """
         Check all the tree to check if something similar already happened. If something match, look for the fastest
         way to get a success result and follow that path.
-        :return:
+        :return: valid moves.
         """
-        ...
+        lion_moves, do_not_use = ["move", "hide", "attack"], []
+        if self.data.get(self.position):
+            inner_data = self.data[self.position]
+            if inner_data.get(distance_between):
+                inner_data = inner_data[distance_between]
+                if inner_data.get(False):
+                    inner_data = inner_data[False]
+                    if inner_data.get(impala_move):
+                        do_not_use = inner_data[impala_move]
+        return list(set(lion_moves) - set(do_not_use))
 
-    def save_knowledge(self, impala_move, lion_move, distance_between):
+    def update_knowledge(self, impala_move, lion_move, distance_between, incursion_status):
         """
         Save everything on a txt file that can be loaded before.
         :return:
         """
-        ...
+        if self.data.get(self.position):
+            inner_object = self.data[self.position]
+            if inner_object.get(distance_between):
+                inner_object = inner_object[distance_between]
+                if inner_object.get(incursion_status) is not None:
+                    inner_object = inner_object[incursion_status]
+                    if inner_object.get(impala_move):
+                        inner_object = self.data[self.position][distance_between][incursion_status]
+                        if lion_move not in inner_object[impala_move]:
+                            self.data[self.position][distance_between][incursion_status][impala_move].append(lion_move)
+                    else:
+                        self.data[self.position][distance_between][incursion_status].update({impala_move: [lion_move]})
+
+                else:
+                    self.data[self.position][distance_between].update({incursion_status: {impala_move: [lion_move]}})
+
+            else:
+                self.data[self.position].update({distance_between: {incursion_status: {impala_move: [lion_move]}}})
+
+        else:
+            self.data.update({self.position: {distance_between: {incursion_status: {impala_move: [lion_move]}}}})
 
     def load_knowledge(self):
         """
@@ -31,6 +60,12 @@ class Knowledge:
         :return:
         """
         ...
+
+    def save_knowldge(self):
+        """
+
+        :return:
+        """
 
 
 def need_to_escape(distance_between):
@@ -81,10 +116,6 @@ def set_initial_distance(initial_position):
     return initial_distance
 
 
-def look_for_knowledge(tree_head, position, distance_between):
-    ...
-
-
 class Lion:
     """
     Notes: Always track lion position.
@@ -96,9 +127,8 @@ class Lion:
         """
         self.position = position
         self.distance_to_impala = set_initial_distance(position)
-        self.lion_moves = ["move", "hide", "attack"]
 
-    def move(self, tree_node):
+    def move(self, lion_moves):
         """
         Using the tree that handles the knowledge choose a move. If no knowledge provided choose it random.
         Should validate the lake spaces.
@@ -108,20 +138,12 @@ class Lion:
         Update board.
         :return:
         """
-        lion_move = random.choice(self.lion_moves)  # this is temporal until we can load the knowledge.
+        lion_move = random.choice(lion_moves)  # this is temporal until we can load the knowledge.
 
         if lion_move == "move":
             self.distance_to_impala = self.distance_to_impala - 1
 
         return lion_move
-
-
-def main():
-    """
-    Core handler of the program. Should load knowledge from the beginning. Handle if the file exists or not.
-    :return:
-    """
-    ...
 
 
 def lion_was_seen(impala_move, lion_move, initial_position):
@@ -182,37 +204,54 @@ def simulate_hunt(initial_position):
         store child node with new moves.
         move tree head.
     """
-    incursion_status, lion_move, impala_move, finish = True, None, None, False
     knowledge = Knowledge(initial_position)
-    impala = Impala()
-    lion = Lion(initial_position)
-
+    incursions, wins = 0, 0
     while True:
-        distance_between = lion.distance_to_impala
-        was_seen = lion_was_seen(impala_move, lion_move, distance_between)
-        if was_seen:
-            finish = True
-            incursion_status = escape_success(distance_between)
+        incursions += 1
+        hunt_status, lion_move, impala_move, finish = True, None, None, False
+        impala = Impala()
+        lion = Lion(initial_position)
 
-        if not finish:
-            impala_move = impala.move(distance_between)
-            if impala_move == "scape":
+        while True:
+            distance_between = lion.distance_to_impala
+            was_seen = lion_was_seen(impala_move, lion_move, initial_position)
+            if was_seen:
                 finish = True
-                incursion_status = escape_success(distance_between)
+                hunt_status = escape_success(distance_between)
+                knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
 
-        if not finish:
-            lion_move = lion.move(tree_head)
-            if lion_move == "attack":
-                finish = True
-                incursion_status = escape_success(distance_between)
+            if not finish:
+                impala_move = impala.move(distance_between)
+                if impala_move == "escape":
+                    finish = True
+                    hunt_status = escape_success(distance_between)
+                    knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
 
-        if finish:
-            # Store incursion
-            print(lion_move, impala_move, incursion_status)
-            user_input = int(input("Continue 1=yes/2=no"))
-            if user_input == 2:
+            if not finish:
+                lion_moves = knowledge.search_knowledge(impala_move, distance_between)
+                lion_move = lion.move(lion_moves)
+                if lion_move == "attack":
+                    finish = True
+                    hunt_status = escape_success(distance_between)
+                    knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
+
+            if finish:
+                if hunt_status:
+                    wins += 1
                 break
-        print(lion_move, impala_move, incursion_status)
+            print(lion_move, impala_move, hunt_status)
+
+        user_input = 1  # int(input("Continue 1=yes/2=no"))
+        if user_input == 2:
+            break
+
+
+def main():
+    """
+    Core handler of the program. Should load knowledge from the beginning. Handle if the file exists or not.
+    :return:
+    """
+    ...
 
 
 simulate_hunt(3)
