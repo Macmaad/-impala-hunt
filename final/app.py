@@ -15,14 +15,24 @@ def translate_knowledge(data):
         for initial_distances in data.keys():
             knowledge_file.write(f"Initial position of lion: {initial_distances}\n")
             for distance_from_impala in data[initial_distances].keys():
-                knowledge_file.write(f"\tDistance from impala: {distance_from_impala}\n")
+                knowledge_file.write(
+                    f"\tDistance from impala: {distance_from_impala}\n"
+                )
                 for do_or_not in data[initial_distances][distance_from_impala].keys():
-                    for impala_moves in data[initial_distances][distance_from_impala][do_or_not].keys():
-                        lion_moves = data[initial_distances][distance_from_impala][do_or_not][impala_moves]
+                    for impala_moves in data[initial_distances][distance_from_impala][
+                        do_or_not
+                    ].keys():
+                        lion_moves = data[initial_distances][distance_from_impala][
+                            do_or_not
+                        ][impala_moves]
                         if do_or_not == "false":
-                            knowledge_file.write(f"\t\tIf impala {impala_moves}. Don't do {lion_moves}\n")
+                            knowledge_file.write(
+                                f"\t\tIf impala {impala_moves}. Don't do {lion_moves}\n"
+                            )
                         else:
-                            knowledge_file.write(f"\t\tIf impala {impala_moves}. Do {lion_moves}\n")
+                            knowledge_file.write(
+                                f"\t\tIf impala {impala_moves}. Do {lion_moves}\n"
+                            )
 
 
 class Knowledge:
@@ -54,7 +64,9 @@ class Knowledge:
                         do_not_use = inner_data[impala_move]
         return list(set(lion_moves) - set(do_not_use))
 
-    def update_knowledge(self, impala_move, lion_move, distance_between, incursion_status):
+    def update_knowledge(
+        self, impala_move, lion_move, distance_between, incursion_status
+    ):
         """
         During the hunting incursions the lion starts learning. This method stores all that knowledge.
         :return: raw_knowledge.txt file
@@ -68,20 +80,36 @@ class Knowledge:
                 if inner_object.get(incursion_status):
                     inner_object = inner_object[incursion_status]
                     if inner_object.get(impala_move):
-                        inner_object = self.data[self.position][distance_between][incursion_status]
+                        inner_object = self.data[self.position][distance_between][
+                            incursion_status
+                        ]
                         if lion_move not in inner_object[impala_move]:
-                            self.data[self.position][distance_between][incursion_status][impala_move].append(lion_move)
+                            self.data[self.position][distance_between][
+                                incursion_status
+                            ][impala_move].append(lion_move)
                     else:
-                        self.data[self.position][distance_between][incursion_status].update({impala_move: [lion_move]})
+                        self.data[self.position][distance_between][
+                            incursion_status
+                        ].update({impala_move: [lion_move]})
 
                 else:
-                    self.data[self.position][distance_between].update({incursion_status: {impala_move: [lion_move]}})
+                    self.data[self.position][distance_between].update(
+                        {incursion_status: {impala_move: [lion_move]}}
+                    )
 
             else:
-                self.data[self.position].update({distance_between: {incursion_status: {impala_move: [lion_move]}}})
+                self.data[self.position].update(
+                    {distance_between: {incursion_status: {impala_move: [lion_move]}}}
+                )
 
         else:
-            self.data.update({self.position: {distance_between: {incursion_status: {impala_move: [lion_move]}}}})
+            self.data.update(
+                {
+                    self.position: {
+                        distance_between: {incursion_status: {impala_move: [lion_move]}}
+                    }
+                }
+            )
 
     def load_knowledge(self):
         """
@@ -137,7 +165,6 @@ def need_to_escape(distance_between):
 
 
 class Impala:
-
     def __init__(self):
         """
         init impala with the position.
@@ -195,7 +222,9 @@ class Lion:
         Update board.
         :return:
         """
-        lion_move = random.choice(lion_moves)  # this is temporal until we can load the knowledge.
+        lion_move = random.choice(
+            lion_moves
+        )  # this is temporal until we can load the knowledge.
 
         if lion_move == "move" and self.distance_to_impala > 0:
             self.distance_to_impala = self.distance_to_impala - 1
@@ -213,13 +242,25 @@ def lion_was_seen(impala_move, lion_move, initial_position):
     :return:
     """
     seen = False
-    if impala_move == "look_right" and lion_move != "hide" and initial_position in (2, 3, 4):
+    if (
+        impala_move == "look_right"
+        and lion_move != "hide"
+        and initial_position in (2, 3, 4)
+    ):
         seen = True
 
-    elif impala_move == "look_up" and lion_move != "hide" and initial_position in (1, 2, 8):
+    elif (
+        impala_move == "look_up"
+        and lion_move != "hide"
+        and initial_position in (1, 2, 8)
+    ):
         seen = True
 
-    elif impala_move == "look_left" and lion_move != "hide" and initial_position in (6, 7, 8):
+    elif (
+        impala_move == "look_left"
+        and lion_move != "hide"
+        and initial_position in (6, 7, 8)
+    ):
         seen = True
 
     return seen
@@ -240,7 +281,9 @@ def escape_success(distance_between):
     return incursion_status
 
 
-def simulate_hunt(initial_positions, manual_hunting=False, number_of_training_incursions=0):
+def simulate_hunt(
+    initial_positions, manual_hunting=False, number_of_training_incursions=0
+):
     """
     Check if is an automatic hunt or a step by step hunt.
     start lion, impala and board.
@@ -289,7 +332,9 @@ def simulate_hunt(initial_positions, manual_hunting=False, number_of_training_in
                 if impala_move == "escape":
                     finish = True
                     hunt_status = escape_success(distance_between)
-                    knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
+                    knowledge.update_knowledge(
+                        impala_move, lion_move, distance_between, hunt_status
+                    )
 
             if not finish:
                 lion_moves = knowledge.search_knowledge(impala_move, distance_between)
@@ -297,7 +342,9 @@ def simulate_hunt(initial_positions, manual_hunting=False, number_of_training_in
                 if lion_move == "attack":
                     finish = True
                     hunt_status = escape_success(distance_between)
-                    knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
+                    knowledge.update_knowledge(
+                        impala_move, lion_move, distance_between, hunt_status
+                    )
 
                 if lion_move == "move":
                     if distance_between > 0:
@@ -305,20 +352,26 @@ def simulate_hunt(initial_positions, manual_hunting=False, number_of_training_in
                         if impala_alter_move == "escape":
                             finish = True
                             hunt_status = escape_success(distance_between - 1)
-                            knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
+                            knowledge.update_knowledge(
+                                impala_move, lion_move, distance_between, hunt_status
+                            )
 
             was_seen = lion_was_seen(impala_move, lion_move, initial_position)
             if was_seen and not finish:
                 finish = True
                 hunt_status = escape_success(distance_between)
-                knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
+                knowledge.update_knowledge(
+                    impala_move, lion_move, distance_between, hunt_status
+                )
 
             if finish:
                 incursion_status = "Finished"
             else:
                 incursion_status = "Continue"
 
-            print(f"Impala action: {impala_move}. Lion action: {lion_move}. Incursion status: {incursion_status}")
+            print(
+                f"Impala action: {impala_move}. Lion action: {lion_move}. Incursion status: {incursion_status}"
+            )
 
             if finish:
                 knowledge.save_knowledge()
@@ -347,7 +400,16 @@ def handle_user_selection(user_selection):
 
     if user_selection == 1:
         initial_position = input("Initial position: ")
-        if initial_position.isdigit() and int(initial_position) in (1, 2, 3, 4, 5, 6, 7, 8):
+        if initial_position.isdigit() and int(initial_position) in (
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+        ):
             data = [int(initial_position)]
         else:
             print("Please choose a correct option...")
@@ -356,7 +418,11 @@ def handle_user_selection(user_selection):
         initial_positions = []
         while True:
             initial_position = input("Initial position: ")
-            if initial_position.isdigit() and int(initial_position) in (1, 2, 3, 4, 5, 6, 7, 8) and initial_position not in initial_positions:
+            if (
+                initial_position.isdigit()
+                and int(initial_position) in (1, 2, 3, 4, 5, 6, 7, 8)
+                and initial_position not in initial_positions
+            ):
                 initial_positions.append(int(initial_position))
             else:
                 print("Not valid position... Try again")
@@ -366,14 +432,15 @@ def handle_user_selection(user_selection):
                 data = [initial_positions]
                 break
         while True:
-            number_of_incursions = input("How many times should the lion train? (ej: 10): ")
+            number_of_incursions = input(
+                "How many times should the lion train? (ej: 10): "
+            )
             if number_of_incursions.isdigit():
                 number_of_incursions = int(number_of_incursions)
                 data.append(number_of_incursions)
                 break
             else:
                 print("Please provide a valid number...")
-
 
     return data
 
@@ -390,7 +457,9 @@ def interactive_menu():
     """
     while True:
         print("\t Teaching a Lion to hunt...")
-        print("------------------------------------------------------------------------------------------")
+        print(
+            "------------------------------------------------------------------------------------------"
+        )
         print("Choose a number: ")
         print("1. Step by step hunt")
         print("2. Train")
@@ -420,9 +489,13 @@ def main():
             simulate_hunt(initial_position, True)
 
         elif user_selection == 2:
-            initial_positions, total_of_trainings = handle_user_selection(user_selection)
+            initial_positions, total_of_trainings = handle_user_selection(
+                user_selection
+            )
             if initial_positions:
-                simulate_hunt(initial_positions, number_of_training_incursions=total_of_trainings)
+                simulate_hunt(
+                    initial_positions, number_of_training_incursions=total_of_trainings
+                )
             else:
                 print("Missing initial positions...")
 
@@ -439,5 +512,5 @@ def main():
             break
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
