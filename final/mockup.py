@@ -208,18 +208,13 @@ def simulate_hunt(initial_position):
     incursions, wins = 0, 0
     while True:
         incursions += 1
-        hunt_status, lion_move, impala_move, finish = True, None, None, False
+        hunt_status, finish = True, False
         impala = Impala()
         lion = Lion(initial_position)
 
         while True:
+            lion_move, impala_move = None, None
             distance_between = lion.distance_to_impala
-            was_seen = lion_was_seen(impala_move, lion_move, initial_position)
-            if was_seen:
-                finish = True
-                hunt_status = escape_success(distance_between)
-                knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
-
             if not finish:
                 impala_move = impala.move(distance_between)
                 if impala_move == "escape":
@@ -234,6 +229,20 @@ def simulate_hunt(initial_position):
                     finish = True
                     hunt_status = escape_success(distance_between)
                     knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
+
+                if lion_move == "move":
+                    if distance_between > 0:
+                        impala_alter_move = impala.move(distance_between - 1)
+                        if impala_alter_move == "escape":
+                            finish = True
+                            hunt_status = escape_success(distance_between - 1)
+                            knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
+
+            was_seen = lion_was_seen(impala_move, lion_move, initial_position)
+            if was_seen and not finish:
+                finish = True
+                hunt_status = escape_success(distance_between)
+                knowledge.update_knowledge(impala_move, lion_move, distance_between, hunt_status)
 
             if finish:
                 if hunt_status:
@@ -254,4 +263,4 @@ def main():
     ...
 
 
-simulate_hunt(3)
+simulate_hunt(8)
