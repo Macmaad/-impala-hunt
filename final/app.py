@@ -8,8 +8,8 @@ def translate_knowledge(data):
     :param data: Complete dictionary with all the data of the lion knowledge
     :return: Creates file that can be easy read for a human.
     """
-    path = "./final/human_friendly_knowledge.txt"
-    if os.path.exists("./final/human_friendly_knowledge.txt"):
+    path = "./human_friendly_knowledge.txt"
+    if os.path.exists(path):
         os.remove(path)
     with open(path, "w") as knowledge_file:
         for initial_distances in data.keys():
@@ -44,7 +44,7 @@ class Knowledge:
         """
         self.position = str(position)
         self.data = dict()
-        self.knowledge_path = "./final/raw_knowledge.txt"
+        self.knowledge_path = "./raw_knowledge.txt"
 
     def search_knowledge(self, impala_move, distance_between):
         """
